@@ -16,7 +16,7 @@ import mhotel.model.Room;
 
 public class Main {
 	public static void main(String[] args) throws SQLException {
-		String jdbcURL = "jdbc:h2:C:\\Users\\Mada\\hotel.mv.db;AUTO_SERVER=TRUE";
+		String jdbcURL = "jdbc:h2:C:\\Users\\Mada\\hotel.mv.db;AUTO_SERVER=TRUE;";
 		// String jdbcURLPostgresql = jdbc:postgresql://host:port/database
 		String userName = "xx";
 		String userPasswd = "xx";

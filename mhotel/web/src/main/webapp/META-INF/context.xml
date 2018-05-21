@@ -1,0 +1,15 @@
+<Context>
+	<Resource name="jdbc/HotelDB" auth="Container"
+		type="javax.sql.DataSource" maxTotal="100" maxIdle="30"
+		driverClassName="org.h2.Driver" maxWaitMillis="10000" username="xx"
+		password="xx" url="jdbc:h2:C:\Users\Mada\hotel.mv.db;AUTO_SERVER=TRUE" />
+	<Realm className="org.apache.catalina.realm.JDBCRealm"
+		driverName="org.h2.Driver"
+		connectionURL="jdbc:h2:C:\Users\Mada\hotel.mv.db;AUTO_SERVER=TRUE;user=xx;password=xx"
+		userTable="hotel.users" userNameCol="user_name"
+		userCredCol="user_pass" userRoleTable="hotel.user_roles"
+		roleNameCol="role_name" />
+	<Resource name="BeanManager" auth="Container"
+		type="javax.enterprise.inject.spi.BeanManager"
+		factory="org.jboss.weld.resources.ManagerObjectFactory" />
+</Context>

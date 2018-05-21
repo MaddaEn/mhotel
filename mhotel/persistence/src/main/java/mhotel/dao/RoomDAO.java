@@ -9,15 +9,16 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import mhotel.model.Hotel;
 import mhotel.model.Room;
 
 public class RoomDAO implements BaseDAOInterface<Room> {
 	private final Connection mConnection;
+	private final HotelDAO mHotelDAO;
 
 	public RoomDAO(Connection pConn) {
 		mConnection = pConn;
+		mHotelDAO = new HotelDAO(mConnection, this);
 	}
 
 	@Override
@@ -102,7 +103,7 @@ public class RoomDAO implements BaseDAOInterface<Room> {
 	public List<Room> findRoomsForHotel(Hotel pHotel) throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
-		
+
 		try {
 			stmt = mConnection.prepareStatement(
 					"SELECT ID,FLOOR_NBR,ROOM_NBR,BED_NBR,AVAILABLE_FOR_RENT, HOTEL_ID FROM  HOTEL.ROOM WHERE HOTEL_ID=?");
@@ -117,9 +118,9 @@ public class RoomDAO implements BaseDAOInterface<Room> {
 				room.setNumberOfBeds(rset.getInt(4));
 				room.setAvailableForRent(rset.getBoolean(5));
 				roomList.add(room);
-		
+
 			}
-			for(Room r : roomList) {
+			for (Room r : roomList) {
 				r.setHotel(pHotel);
 			}
 			return roomList;
@@ -162,6 +163,102 @@ public class RoomDAO implements BaseDAOInterface<Room> {
 				return null;
 			}
 
+		} finally {
+			if (rset != null) {
+				rset.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+	}
+	
+	public Room loadFullById(Long pId) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rset = null;
+		if (pId == null) {
+			throw new RuntimeException("loadFullById - NULL pID");
+		}
+		try {
+			stmt = mConnection.prepareStatement(
+					"SELECT ID,FLOOR_NBR,ROOM_NBR,BED_NBR,AVAILABLE_FOR_RENT, HOTEL_ID FROM  HOTEL.ROOM WHERE ID=?");
+			stmt.setLong(1, pId);
+			rset = stmt.executeQuery();
+			if (rset.next()) {
+				Room room = new Room();
+				room.setId(rset.getLong(1));
+				room.setFloor(rset.getInt(2));
+				room.setNumber(rset.getString(3));
+				room.setNumberOfBeds(rset.getInt(4));
+				room.setAvailableForRent(rset.getBoolean(5));
+				room.setHotel(mHotelDAO.loadByIdNoRooms(rset.getLong(6)));
+
+				// cust.setAddress(mAddrDAO.loadById(rset.getLong(6)));
+				return room;
+			} else {
+				return null;
+			}
+
+		} finally {
+			if (rset != null) {
+				rset.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+	}
+
+	public List<Room> listAllFree() throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rset = null;
+		List<Room> roomList = new ArrayList<>();
+		try {
+			stmt = mConnection.prepareStatement(
+					"SELECT ID,FLOOR_NBR,ROOM_NBR,BED_NBR,AVAILABLE_FOR_RENT, HOTEL_ID FROM  HOTEL.ROOM WHERE AVAILABLE_FOR_RENT AND ID NOT IN (SELECT ROOM_ID FROM HOTEL.CUSTOMER_RECORD WHERE CHECKED_OUT IS NULL) ORDER BY HOTEL_ID");
+			rset = stmt.executeQuery();
+			while (rset.next()) {
+				Room room = new Room();
+				room.setId(rset.getLong(1));
+				room.setFloor(rset.getInt(2));
+				room.setNumber(rset.getString(3));
+				room.setNumberOfBeds(rset.getInt(4));
+				room.setAvailableForRent(rset.getBoolean(5));
+				// cust.setAddress(mAddrDAO.loadById(rset.getLong(6)));
+				room.setHotel(mHotelDAO.loadByIdNoRooms(rset.getLong(6)));
+				roomList.add(room);
+			}
+			return roomList;
+		} finally {
+			if (rset != null) {
+				rset.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+	}
+	
+	public List<Room> listAllOccupied() throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rset = null;
+		List<Room> roomList = new ArrayList<>();
+		try {
+			stmt = mConnection.prepareStatement(
+					"SELECT ID,FLOOR_NBR,ROOM_NBR,BED_NBR,AVAILABLE_FOR_RENT, HOTEL_ID FROM  HOTEL.ROOM WHERE AVAILABLE_FOR_RENT AND ID IN (SELECT ROOM_ID FROM HOTEL.CUSTOMER_RECORD WHERE CHECKED_OUT IS NULL) ORDER BY HOTEL_ID");
+			rset = stmt.executeQuery();
+			while (rset.next()) {
+				Room room = new Room();
+				room.setId(rset.getLong(1));
+				room.setFloor(rset.getInt(2));
+				room.setNumber(rset.getString(3));
+				room.setNumberOfBeds(rset.getInt(4));
+				room.setAvailableForRent(rset.getBoolean(5));
+				// cust.setAddress(mAddrDAO.loadById(rset.getLong(6)));
+				room.setHotel(mHotelDAO.loadByIdNoRooms(rset.getLong(6)));
+				roomList.add(room);
+			}
+			return roomList;
 		} finally {
 			if (rset != null) {
 				rset.close();

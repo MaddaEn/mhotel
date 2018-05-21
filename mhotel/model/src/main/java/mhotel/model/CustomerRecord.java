@@ -1,15 +1,14 @@
 package mhotel.model;
 
 import java.io.Serializable;
-import java.sql.Date;
-
+import java.util.Date;
 
 public class CustomerRecord implements Serializable {
 	private Long mId; // PK
 	private Customer mCustomer;
 	private Room mRoom;
 	private Date mCheckInDate;
-	private Date mCheckOutDate; // NULL IF NOT CHECKED OUT
+	private Date mCheckOutDate; // NULL IFF NOT CHECKED OUT
 
 	public Long getId() {
 		return mId;

@@ -1,6 +1,7 @@
 package mhotel.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Hotel implements Serializable {
@@ -43,6 +44,9 @@ public class Hotel implements Serializable {
 	}
 
 	public List<Room> getRooms() {
+		if(mRooms == null) {
+			mRooms = new ArrayList<>();
+		}
 		return mRooms;
 	}
 

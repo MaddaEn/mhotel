@@ -23,6 +23,12 @@ public class HotelDAO implements BaseDAOInterface<Hotel> {
 		mRoomDAO = new RoomDAO(mConnection);
 		mAddressDAO = new AddressDAO(mConnection);
 	}
+	
+	protected HotelDAO(Connection pConn, RoomDAO pRoomDAO) {
+		mConnection = pConn;
+		mRoomDAO = pRoomDAO;
+		mAddressDAO = new AddressDAO(mConnection);
+	}
 
 	@Override
 	public Hotel insert(Hotel pValue) throws SQLException {
@@ -77,54 +83,31 @@ public class HotelDAO implements BaseDAOInterface<Hotel> {
 		}
 	}
 
-	@Override // ME
+	@Override
 	public Hotel update(Hotel pValue) throws SQLException {
-		PreparedStatement stmt = null;
-		if (pValue.getId() == null) {
-			throw new RuntimeException("Object must NOT have null ID for update");
-		}
-		try {
-			mAddressDAO.update(pValue.getAddress());
-			stmt = mConnection.prepareStatement("UPDATE HOTEL.HOTEL SET NAME=?,RATING=?,ADDRESS_ID=? WHERE ID=?");
-			if (pValue.getName() != null) {
-				// if(pValue.getSTreet().length() > 64 ) //
-				stmt.setString(1, pValue.getName());
-			} else {
-				stmt.setNull(1, Types.VARCHAR);
-			}
-
-			stmt.setInt(2, pValue.getRating());
-
-			stmt.setLong(3, pValue.getAddress().getId());
-
-			stmt.setLong(5, pValue.getId());
-			int rc = stmt.executeUpdate();
-			return loadById(pValue.getId());
-		} finally {
-			if (stmt != null) {
-				stmt.close();
-			}
-		}
+		// TODO Auto-generated method stub
+		return null;
 	}
 
-	@Override // ME
+	@Override
 	public List<Hotel> listAll() throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
+		List<Hotel> resultList = new ArrayList<>();
 		try {
-			stmt = mConnection.prepareStatement("SELECT ID,NAME,RATING,ADDRESS_ID FROM  HOTEL.HOTEL ");
+			stmt = mConnection.prepareStatement("SELECT ID,NAME,RATING, ADDRESS_ID FROM  HOTEL.HOTEL");
 			rset = stmt.executeQuery();
-			List<Hotel> result = new ArrayList<>();
 			while (rset.next()) {
-				Hotel hot = new Hotel();
-				hot.setId(rset.getLong(1));
-				hot.setName(rset.getString(2));
-				hot.setRating(rset.getInt(3));
-				hot.setAddress(mAddressDAO.loadById(rset.getLong(4)));
-				result.add(hot);
-
+				Hotel hotel = new Hotel();
+				hotel.setId(rset.getLong(1));
+				hotel.setName(rset.getString(2));
+				hotel.setRating(rset.getInt(3));
+				hotel.setAddress(mAddressDAO.loadById(rset.getLong(4)));
+				hotel.setRooms(mRoomDAO.findRoomsForHotel(hotel));
+				resultList.add(hotel);
+			
 			}
-			return result;
+			return resultList;
 		} finally {
 			if (rset != null) {
 				rset.close();
@@ -133,6 +116,7 @@ public class HotelDAO implements BaseDAOInterface<Hotel> {
 				stmt.close();
 			}
 		}
+
 	}
 
 	@Override
@@ -153,6 +137,44 @@ public class HotelDAO implements BaseDAOInterface<Hotel> {
 				hotel.setRating(rset.getInt(3));
 				hotel.setAddress(mAddressDAO.loadById(rset.getLong(4)));
 				hotel.setRooms(mRoomDAO.findRoomsForHotel(hotel));
+				return hotel;
+			} else {
+				return null;
+			}
+
+		} finally {
+			if (rset != null) {
+				rset.close();
+			}
+			if (stmt != null) {
+				stmt.close();
+			}
+		}
+	}
+
+	/**
+	 * Load the hotel without loading rooms
+	 * @param pId
+	 * @return
+	 * @throws SQLException
+	 */
+	public Hotel loadByIdNoRooms(Long pId) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rset = null;
+		if (pId == null) {
+			throw new RuntimeException("loadById - NULL pID");
+		}
+		try {
+			stmt = mConnection.prepareStatement("SELECT ID,NAME,RATING, ADDRESS_ID FROM  HOTEL.HOTEL WHERE ID=?");
+			stmt.setLong(1, pId);
+			rset = stmt.executeQuery();
+			if (rset.next()) {
+				Hotel hotel = new Hotel();
+				hotel.setId(rset.getLong(1));
+				hotel.setName(rset.getString(2));
+				hotel.setRating(rset.getInt(3));
+				hotel.setAddress(mAddressDAO.loadById(rset.getLong(4)));
+				//hotel.setRooms(mRoomDAO.findRoomsForHotel(hotel));
 				return hotel;
 			} else {
 				return null;
